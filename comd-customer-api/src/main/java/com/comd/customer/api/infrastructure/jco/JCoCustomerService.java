@@ -16,10 +16,13 @@ import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
 import com.sap.conn.jco.JCoFunction;
 import com.sap.conn.jco.JCoStructure;
+import com.sap.conn.jco.JCoTable;
 import com.sap.conn.jco.ext.DestinationDataProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,7 +128,6 @@ public class JCoCustomerService implements CustomerService {
 //        if (!(returnStructure.getString("TYPE").equals("") || returnStructure.getString("TYPE").equals("S"))) {
 //            throw new RuntimeException(returnStructure.getString("MESSAGE"));
 //        }
-
         JCoStructure customerStructure = function.getExportParameterList().getStructure("CUSTOMERADDRESS");
 
         Customer customer = new Customer();
@@ -145,7 +147,42 @@ public class JCoCustomerService implements CustomerService {
 
     @Override
     public CustomerListResponse customers() throws JCoException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        JCoDestination destination = JCoDestinationManager.getDestination(sapRfcDestination);
+        JCoFunction getCustomerListFunction = destination.getRepository().getFunction("ZCUSTOMER_GETLIST");
+        if (getCustomerListFunction == null) {
+            throw new RuntimeException("ZCUSTOMER_GETLIST not found in SAP.");
+        }
+
+        getCustomerListFunction.getImportParameterList().setValue("CUSTOMER_TYPE", "C");
+
+        try {
+            getCustomerListFunction.execute(destination);
+        } catch (AbapException e) {
+            logger.log(Level.INFO, "--- Error occurred ---\n{0}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        JCoTable customerDataTable = getCustomerListFunction.getTableParameterList().getTable("CUSTOMERDATA");
+
+        List<Customer> customerList = new ArrayList<>();
+
+        for (int i = 0; i < customerDataTable.getNumRows(); i++, customerDataTable.nextRow()) {
+            Customer customer = new Customer();
+            customer.setNumber(customerDataTable.getString("CUSTOMER"));
+            customer.setName(customerDataTable.getString("NAME"));
+
+            Address address = new Address(
+                    customerDataTable.getString("STREET"),
+                    customerDataTable.getString("CITY"),
+                    customerDataTable.getString("REGION"),
+                    customerDataTable.getString("COUNTRY")
+            );
+            customer.setAddress(address);
+
+            customerList.add(customer);
+        }
+
+        return new CustomerListResponse(customerList);
     }
 
 }

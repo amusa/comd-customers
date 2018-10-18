@@ -32,8 +32,9 @@ public class CustomerResource {
 
     }
 
+    @Path("/")
     @GET
-    public Response getCustomer() throws JCoException {
+    public Response getCustomerList() throws JCoException {
 
         return Response
                 .ok(customerService.customers())

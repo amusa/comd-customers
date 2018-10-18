@@ -13,6 +13,13 @@ import java.util.List;
  */
 public class CustomerListResponse {
 
+    public CustomerListResponse() {
+    }
+
+    public CustomerListResponse(List<Customer> customerList) {
+        this.customerList = customerList;
+    }
+
     private List<Customer> customerList;
 
     public List<Customer> getCustomerList() {

@@ -5,6 +5,8 @@
  */
 package com.comd.customer.lib.v1.response;
 
+import java.util.Objects;
+
 /**
  *
  * @author maliska
@@ -39,4 +41,35 @@ public class Customer {
         this.address = address;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 29 * hash + Objects.hashCode(this.number);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Customer other = (Customer) obj;
+        if (!Objects.equals(this.number, other.number)) {
+            return false;
+        }
+        return true;
+    }
+
+    
 }
